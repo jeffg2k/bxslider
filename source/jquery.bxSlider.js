@@ -73,7 +73,7 @@
 		var base = this;
 		// initialize (and localize) all variables
 		var $parent = '';
-		var $origElement = '';
+		//var $origElement = '';
 		var $children = '';
 		var $outerWrapper = '';
 		var $firstChild = '';
@@ -484,7 +484,7 @@
 			// reinitialize all variables
 			// base = this;
 			$parent = $(this);
-			$origElement = $parent.clone();
+			//$origElement = $parent.clone();
 			$children = $parent.children();
 			$outerWrapper = '';
 			$firstChild = $parent.children(':first');
@@ -528,13 +528,18 @@
 			if(options.randomStart){
 				var randomNumber = Math.floor(Math.random() * $children.length);
 				currentSlide = randomNumber;
+				if(!options.infiniteLoop)
+					randomNumber--;
 				origLeft = childrenOuterWidth * (options.moveSlideQty + randomNumber);
 				origTop = childrenMaxHeight * (options.moveSlideQty + randomNumber);
 			// start show at specific slide
 			}else{
 				currentSlide = options.startingSlide;
-				origLeft = childrenOuterWidth * (options.moveSlideQty + options.startingSlide);
-				origTop = childrenMaxHeight * (options.moveSlideQty + options.startingSlide);
+				var infLoopOffset = 0;
+				if(!options.infiniteLoop)
+					infLoopOffset = -1;
+				origLeft = childrenOuterWidth * (options.startingSlide + infLoopOffset);
+				origTop = childrenMaxHeight * (options.moveSlideQty + options.startingSlide + infLoopOffset);
 			}
 						
 			// set initial css
@@ -546,6 +551,8 @@
 					showPager('full');
 				}else if(options.pagerType == 'short'){
 					showPager('short');
+				}else if(options.pagerType == 'bullet'){
+					showPager('bullet')
 				}
 			}
 						
@@ -691,10 +698,13 @@
 				// get the children behind
 				var $prependedChildren = getArraySample($children, 0, options.moveSlideQty, 'backward');
 				
-				// add each prepended child to the back of the original element
-				$.each($prependedChildren, function(index) {
-					$parent.prepend($(this));
-				});			
+				if(options.infiniteLoop){
+					
+					// add each prepended child to the back of the original element
+					$.each($prependedChildren, function(index) {
+						$parent.prepend($(this));
+					});			
+				}		
 				
 				// total number of slides to be hidden after the window
 				var totalNumberAfterWindow = ($children.length + options.moveSlideQty) - 1;
@@ -1029,7 +1039,12 @@
 			}else if(type == 'short') {
 				// build the short pager
 				pagerString = '<span class="bx-pager-current">'+(options.startingSlide+1)+'</span> '+options.pagerShortSeparator+' <span class="bx-pager-total">'+$children.length+'</span>';
-			}	
+			}else if(type == 'bullet') {
+				// build the bullet pager
+				for(var i=1; i<=pagerQty; i++){
+					pagerString += '<a href="" class="pager-link pager-'+i+'">&bull;</a>';
+				}
+			}
 			// check if user supplied a pager selector
 			if(options.pagerSelector){
 				$(options.pagerSelector).append(pagerString);
@@ -1048,7 +1063,7 @@
 			}
 			$pager.children().click(function() {
 				// only if pager is full mode
-				if(options.pagerType == 'full'){
+				if(options.pagerType == 'full' || options.pagerType == 'bullet'){
 					// get the index from the link
 					var slideIndex = $pager.children().index(this);
 					// accomodate moving more than one slide
@@ -1147,7 +1162,7 @@
 					$('.bx-prev', $outerWrapper).show();
 				}
 				// check next
-				if(currentSlide == lastSlide){
+				if(currentSlide == lastSlide || currentSlide + options.moveSlideQty > lastSlide) {
 					$('.bx-next', $outerWrapper).hide();
 				}else{
 					$('.bx-next', $outerWrapper).show();
@@ -1257,4 +1272,3 @@
 
 		
 })(jQuery);
-
